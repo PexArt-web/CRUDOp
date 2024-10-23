@@ -13,10 +13,29 @@ const io = new Server(httpServer, {
 let crudData = [];
 
 io.on("connection", (socket) => {
-  socket.on("formdata", (formData) => {
-    log(formData)
-  })
-  socket.emit("message", "hello world!");
+  // receiving data
+  socket.on("formData", (formData) => {
+    crudData.push(formData);
+    socket.emit("crudData", crudData);
+    //editing data received  
+    socket.on("editData", (response) => {
+      let currentData = crudData.findIndex(data => data.id === response.id)
+      if (currentData != -1){
+        crudData[currentData] ={...crudData[currentData], ...response} 
+      }
+    })
+    // deleting data received
+    socket.on("deleteData", (id) => {
+      let currentData = crudData.findIndex(data => data.id === id)
+
+      if(currentData != -1){
+        crudData.splice(currentData, 1)
+      }
+    })
+    setInterval(() => {
+      socket.emit("crudData", crudData);
+    }, 2000);
+  });
 });
 
 httpServer.listen(port, () => {
